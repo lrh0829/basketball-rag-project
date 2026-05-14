@@ -1,0 +1,9 @@
+langchain
+langchain-openai
+langchain-community
+chromadb
+python-dotenv
+openai
+flask
+flask-cors
+dashscope

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏀 篮球规则智能问答</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .bg-animation span {
+            position: absolute;
+            display: block;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            animation: float 25s linear infinite;
+            bottom: -150px;
+            border-radius: 50%;
+        }
+
+        .bg-animation span:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+        .bg-animation span:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .bg-animation span:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+        .bg-animation span:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+        .bg-animation span:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+        .bg-animation span:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+        .bg-animation span:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
+        .bg-animation span:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+        .bg-animation span:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+        .bg-animation span:nth-child(10) { left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 0; }
+            100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 900px;
+            height: 85vh;
+            max-height: 700px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 28px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .header-text h1 {
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        .reset-btn {
+            margin-left: auto;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            line-height: 1.7;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.assistant .message-content {
+            background: #f1f3f5;
+            color: #1a1a2e;
+            border-bottom-left-radius: 6px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Markdown样式优化 */
+        .message.assistant .message-content h1,
+        .message.assistant .message-content h2,
+        .message.assistant .message-content h3 {
+            color: #1a1a2e;
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content h1 {
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 4px;
+        }
+
+        .message.assistant .message-content h2 {
+            font-size: 16px;
+            color: #667eea;
+        }
+
+        .message.assistant .message-content h3 {
+            font-size: 15px;
+            color: #764ba2;
+        }
+
+        .message.assistant .message-content table.md-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 2px solid #93c5fd;
+        }
+
+        .message.assistant .message-content table.md-table th {
+            background: #fefdfb;
+            color: #1e3a5f;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 2px solid #bfdbfe;
+        }
+
+        .message.assistant .message-content table.md-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #bfdbfe;
+            font-size: 13px;
+            text-align: left;
+            vertical-align: top;
+            color: #1e3a5f;
+        }
+
+        .message.assistant .message-content table.md-table tr:nth-child(even) {
+            background: #f0f9ff;
+        }
+
+        .message.assistant .message-content table.md-table tr:nth-child(odd) {
+            background: white;
+        }
+
+        .message.assistant .message-content table.md-table tr:hover {
+            background: #dbeafe;
+        }
+
+        .message.assistant .message-content table.md-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .message.assistant .message-content ul,
+        .message.assistant .message-content ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .message.assistant .message-content ul {
+            list-style-type: disc;
+        }
+
+        .message.assistant .message-content ol {
+            list-style-type: decimal;
+        }
+
+        .message.assistant .message-content li {
+            margin: 6px 0;
+            line-height: 1.6;
+            padding-left: 4px;
+        }
+
+        .message.assistant .message-content ul li::marker {
+            color: #667eea;
+        }
+
+        .message.assistant .message-content ol li::marker {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content strong {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .message.assistant .message-content blockquote {
+            border-left: 4px solid #667eea;
+            background: #f8fafc;
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        .message.error .message-content {
+            background: #fee;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .sources-box {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 1px solid #bae6fd;
+        }
+
+        .sources-box h4 {
+            color: #0369a1;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .source-item {
+            font-size: 12px;
+            color: #475569;
+            padding: 6px 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            border-left: 3px solid #0ea5e9;
+        }
+
+        .source-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.typing .message-content {
+            background: #f1f3f5;
+            padding: 20px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .input-container {
+            padding: 20px 24px;
+            background: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 52px;
+            height: 52px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .send-btn:hover:not(:disabled) svg {
+            transform: translateX(2px);
+        }
+
+        .quick-questions {
+            padding: 16px 24px;
+            background: #fafafa;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .quick-questions span {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-right: 4px;
+        }
+
+        .quick-btn {
+            padding: 6px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: white;
+            color: #64748b;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="avatar">🏀</div>
+            <div class="header-text">
+                <h1>篮球规则智能问答</h1>
+                <p>AI 助手，为您解答篮球规则问题</p>
+            </div>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span style="color: white; font-size: 12px;">在线</span>
+            </div>
+            <button class="reset-btn" onclick="resetConversation()" title="清空对话">🗑️ 清空</button>
+        </div>
+
+        <div class="quick-questions">
+            <span>快捷问题:</span>
+            <button class="quick-btn" onclick="askQuestion('篮球比赛的得分规则是什么？')">🏀 得分规则</button>
+            <button class="quick-btn" onclick="askQuestion('什么是防守犯规？')">🚨 防守犯规</button>
+            <button class="quick-btn" onclick="askQuestion('篮球比赛的时间是多少？')">⏱️ 比赛时间</button>
+            <button class="quick-btn" onclick="askQuestion('什么叫走步违例？')">🚶 走步违例</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message assistant">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    你好！我是篮球规则智能问答助手 🏀<br><br>
+                    我可以帮你解答各种篮球规则问题，比如：<br>
+                    • 得分规则<br>
+                    • 犯规类型<br>
+                    • 比赛时间<br>
+                    • 违例情况<br><br>
+                    试试点击上方快捷问题，或者直接输入你的问题吧！
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" id="questionInput" placeholder="输入您的问题..." onkeypress="handleKeyPress(event)">
+            </div>
+            <button class="send-btn" onclick="sendQuestion()" id="sendBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = localStorage.getItem('chat_session_id');
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_session_id', sessionId);
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/history?session_id=${sessionId}`);
+                const data = await response.json();
+                if (data.history && data.history.length > 0) {
+                    const chatContainer = document.getElementById('chatContainer');
+                    chatContainer.innerHTML = '';
+                    data.history.forEach(msg => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${msg.role}`;
+                        const avatar = msg.role === 'user' ? '👤' : '🤖';
+                        messageDiv.innerHTML = `
+                            <div class="message-avatar">${avatar}</div>
+                            <div class="message-content">${escapeHtml(msg.content)}</div>
+                        `;
+                        chatContainer.appendChild(messageDiv);
+                    });
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            } catch (e) {
+                console.log('加载历史记录失败');
+            }
+        }
+
+        loadHistory();
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendQuestion();
+            }
+        }
+
+        function askQuestion(question) {
+            document.getElementById('questionInput').value = question;
+            sendQuestion();
+        }
+
+        function resetConversation() {
+            if (!confirm('确定要清空所有对话历史吗？')) return;
+
+            fetch('/api/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            }).then(() => {
+                const chatContainer = document.getElementById('chatContainer');
+                chatContainer.innerHTML = `
+                    <div class="message assistant">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            对话已清空！你可以开始新的提问了。
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatContainer = document.getElementById('chatContainer');
+
+            const question = input.value.trim();
+            if (!question) return;
+
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user';
+            userMessage.innerHTML = `
+                <div class="message-avatar">👤</div>
+                <div class="message-content">${escapeHtml(question)}</div>
+            `;
+            chatContainer.appendChild(userMessage);
+
+            input.value = '';
+
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'message assistant typing';
+            loadingMessage.id = 'loadingMessage';
+            loadingMessage.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="typing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(loadingMessage);
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question, session_id: sessionId })
+                });
+
+                const data = await response.json();
+                chatContainer.removeChild(loadingMessage);
+
+                const assistantMessage = document.createElement('div');
+                assistantMessage.className = 'message assistant' + (data.error ? ' error' : '');
+
+                let messageContent = data.error ? escapeHtml(data.error) : renderMarkdown(data.answer);
+
+                if (data.sources && data.sources.length > 0) {
+                    const sourcesHtml = data.sources.map(s =>
+                        `<div class="source-item">📄 ${escapeHtml(s)}</div>`
+                    ).join('');
+                    messageContent += `
+                        <div class="sources-box">
+                            <h4>📚 参考来源</h4>
+                            ${sourcesHtml}
+                        </div>
+                    `;
+                }
+
+                assistantMessage.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">${messageContent}</div>
+                `;
+                chatContainer.appendChild(assistantMessage);
+
+            } catch (error) {
+                chatContainer.removeChild(loadingMessage);
+
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'message assistant error';
+                errorMessage.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">发生错误：${escapeHtml(error.message)}</div>
+                `;
+                chatContainer.appendChild(errorMessage);
+            }
+
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>`;
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        function renderMarkdown(text) {
+            if (!text) return '';
+
+            const tableRegex = /\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g;
+            text = text.replace(tableRegex, function(match, headerLine, bodyLines) {
+                const headers = headerLine.split('|').map(h => h.trim()).filter(h => h);
+                const headerHtml = headers.map(h => `<th>${h}</th>`).join('');
+
+                const rows = bodyLines.trim().split('\n').map(row => {
+                    const cells = row.split('|').slice(1, -1).map(cell => cell.trim());
+                    return `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
+                }).join('');
+
+                return `<table class="md-table"><thead><tr>${headerHtml}</tr></thead><tbody>${rows}</tbody></table>`;
+            });
+
+            text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+            text = text.replace(/`(.+?)`/g, '<code>$1</code>');
+
+            text = text.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+            text = text.replace(/((?:^[*-] .+$\n?)+)/gm, function(match) {
+                const items = match.trim().split('\n').map(item => {
+                    return '<li>' + item.replace(/^[*-] /, '') + '</li>';
+                }).join('');
+                return '<ul>' + items + '</ul>';
+            });
+
+            text = text.replace(/(\d+\. .+(\n|$))+/g, function(match) {
+                const items = match.trim().split('\n').map(item => {
+                    return '<li>' + item.replace(/^\d+\. /, '') + '</li>';
+                }).join('');
+                return '<ol>' + items + '</ol>';
+            });
+
+            text = text.replace(/\n{2,}/g, '</p><p>');
+            text = text.replace(/\n/g, '<br>');
+
+            if (!text.startsWith('<')) {
+                text = '<p>' + text + '</p>';
+            }
+
+            return text;
+        }
+    </script>
+</body>
+</html>
