@@ -100,7 +100,7 @@ class BasketballRuleAgent:
             print("LLM创建成功")
 
             print("正在构建 RAG 链...")
-            rag_template = """你是一个篮球规则专家。根据以下参考资料和对话历史回答问题。
+            rag_template = """你是一个篮球知识专家，精通篮球规则和球员信息。
 
 参考资料：
 {context}
@@ -110,9 +110,12 @@ class BasketballRuleAgent:
 
 问题：{question}
 
-请用专业严谨的语言回答，重要规则用**粗体**标注。如果问题与篮球无关，请回答："抱歉，我是篮球规则专家，只能回答篮球相关问题。"
+请用专业严谨的语言回答。如果问题与篮球无关，请回答："抱歉，我是篮球专家，只能回答篮球相关问题。"
 
 回答要求：
+- 必须根据参考资料回答，不要依赖外部知识
+- 参考资料中没有的信息，直接说"参考资料中未找到相关信息"，不要猜测
+- 涉及球员时，必须注明球员所属联赛（CBA/NBA/其他）
 - 如果对话历史中已经讨论过相关话题，可以结合历史记录连贯地回答
 - 追问时注意指代明确（"它"、"这个规则"等需要明确是什么）
 - 重要信息用**粗体**标注"""
@@ -140,6 +143,12 @@ class BasketballRuleAgent:
             traceback.print_exc()
             self.qa_chain = None
     
+    def _get_search_k(self, question):
+        """根据问题类型动态调整检索数量，球员类问题多检索"""
+        player_kw = ["球员", "球星", "谁", "哪个队", "效力", "身高", "体重", "位置", "号码", "几号",
+                     "后卫", "前锋", "中锋", "控球", "得分后卫", "小前锋", "大前锋", "CBA", "NBA"]
+        return 5 if any(kw in question for kw in player_kw) else 3
+
     def get_answer(self, question, history=None):
         """获取问题的回答"""
         if history is None:
@@ -161,11 +170,12 @@ class BasketballRuleAgent:
                     history_lines.append(f"{role}：{msg['content']}")
                 history_str = "\n".join(history_lines)
 
-            print("正在检索并生成回答...")
+            search_k = self._get_search_k(question)
+            print(f"正在检索并生成回答... (k={search_k})")
             if history_str:
                 retriever = self.vectorstore.as_retriever(
                     search_type="similarity",
-                    search_kwargs={"k": 3}
+                    search_kwargs={"k": search_k}
                 )
                 history_chain = (
                     {"context": retriever, "question": RunnablePassthrough(), "history": lambda x: history_str}
@@ -179,7 +189,7 @@ class BasketballRuleAgent:
 
             source_docs = []
             if self.vectorstore:
-                docs = self.vectorstore.similarity_search(question, k=3)
+                docs = self.vectorstore.similarity_search(question, k=search_k)
                 source_docs = [doc.page_content[:200] for doc in docs]
 
             return {"result": answer, "source_documents": source_docs}
