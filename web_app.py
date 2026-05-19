@@ -15,6 +15,10 @@ CORS(app)
 API_KEY = os.getenv("API_KEY")
 
 agent = BasketballRuleAgent()
+# 启动时预初始化，避免首次请求等待
+print("正在预加载知识库...")
+agent._ensure_init()
+print("知识库加载完成！")
 
 chat_histories = {}
 
